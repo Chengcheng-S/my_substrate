@@ -3,12 +3,12 @@
 ///multisig module
 pub use pallet::*;
 
+mod benchmarking;
 #[cfg(test)]
 mod mock;
 #[cfg(test)]
 mod test;
 pub mod weights;
-mod benchmarking;
 
 pub use weights::*;
 
@@ -205,15 +205,16 @@ pub mod pallet {
 
 			match !add_members.is_empty() && add_members.len() == members.len() {
 				false => return Err(Error::<T>::MinMultisigNumber.into()),
-				true =>
+				true => {
 					if members.contains(&who) {
 						Self::change_multisig_members(&mut add_members, true)?;
 						let dyn_threshold = Self::calculate_dyn_threshold(&members);
 
 						Self::deposit_event(Event::CreateMultisig { who, dyn_threshold });
 					} else {
-						return Err(Error::<T>::MinMultisigNumber.into())
-					},
+						return Err(Error::<T>::MinMultisigNumber.into());
+					}
+				},
 			}
 
 			//generate a multisig account address
@@ -238,7 +239,7 @@ pub mod pallet {
 					let multisig_members_len = multisig_members.len();
 
 					if multisig_members_len > 5 {
-						return Err(Error::<T>::MaxProposalNumber.into())
+						return Err(Error::<T>::MaxProposalNumber.into());
 					} else {
 						let proposal_id = Proposals::<T>::iter().count() as u32 + 1;
 
@@ -341,8 +342,8 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 
 			// check the sender  in multisig group
-			match MultisigMembers::<T>::get().contains(&who) &&
-				MultisigMembers::<T>::get().contains(&member)
+			match MultisigMembers::<T>::get().contains(&who)
+				&& MultisigMembers::<T>::get().contains(&member)
 			{
 				true => {
 					// just create remove member proposal
@@ -362,8 +363,8 @@ pub mod pallet {
 			let who = ensure_signed(origin.clone())?;
 
 			// check the sender  in multisig group
-			match MultisigMembers::<T>::get().contains(&who) &&
-				!MultisigMembers::<T>::get().contains(&member)
+			match MultisigMembers::<T>::get().contains(&who)
+				&& !MultisigMembers::<T>::get().contains(&member)
 			{
 				true => {
 					// just create add member proposal
@@ -540,7 +541,7 @@ pub mod pallet {
 					let multisig_members_len = multisig_members.len();
 
 					if multisig_members_len > 5 {
-						return Err(Error::<T>::MaxProposalNumber.into())
+						return Err(Error::<T>::MaxProposalNumber.into());
 					} else {
 						let proposal_id = Proposals::<T>::iter().count() as u32 + 1;
 
@@ -638,7 +639,7 @@ pub mod pallet {
 		}
 
 		// multisig group dyn threshold
-		fn calculate_dyn_threshold(members: &Vec<T::AccountId>) -> u32 {
+		fn calculate_dyn_threshold(members: &[T::AccountId]) -> u32 {
 			let member_numbers = members.len() as u32;
 			match member_numbers {
 				0..=3 => member_numbers,       // must all
